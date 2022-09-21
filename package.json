@@ -4,10 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "prestart": "rm -rf dist",
-    "start": "npm run build && node -r tsconfig-paths/register dist/src",
-    "be": "rm -rf dist",
-    "build": "tsc"
+    "build": "rm -rf dist && tsc",
+    "start": "node -r tsconfig-paths/register dist/src"
   },
   "author": "",
   "license": "ISC",
