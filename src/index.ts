@@ -1,5 +1,4 @@
-import { Client, Intents, Snowflake, Interaction, GuildMember, MessageEmbed } from 'discord.js'
-import * as dotenv from 'dotenv'
+import { GuildMember, Interaction, Snowflake, Client, Events, GatewayIntentBits, EmbedBuilder } from 'discord.js'
 import {
     AudioPlayerStatus,
     AudioResource,
@@ -8,79 +7,27 @@ import {
     VoiceConnectionStatus
 } from '@discordjs/voice'
 import play from 'play-dl'
-import { cfg } from '../config.json'
 import { MusicSubscription } from './subscription'
 import { Track } from './track'
 
-const client = new Client({
-    intents: new Intents(cfg.intents as any),
-    presence: {
-        status: 'idle'
-    }
+const client = new Client({ 
+    intents: [
+        GatewayIntentBits.Guilds, GatewayIntentBits.GuildBans, GatewayIntentBits.GuildEmojisAndStickers,
+        GatewayIntentBits.GuildIntegrations, GatewayIntentBits.GuildWebhooks, GatewayIntentBits.GuildInvites,
+        GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.GuildMessageTyping, GatewayIntentBits.DirectMessages, GatewayIntentBits.DirectMessageReactions,
+        GatewayIntentBits.DirectMessageTyping
+    ]
 })
-dotenv.config()
-client.on('ready', () => console.log('Bot are ready!'))
 
-client.on('messageCreate', async (message) => {
-    if(!message.guild) return
-    if(!client.application?.owner) await client.application?.fetch()
-
-    if(message.content.toLowerCase() === '!setup-commands' && message.author.id === client.application?.owner?.id) {
-        await message.guild.commands.set([
-            {
-                name: 'play',
-                description: 'Воспроизвести трек, по ссылке url: | поиск search:',
-                options: [
-                    {
-                        name: 'url',
-                        type: 'STRING',
-                        description: 'Ссылка на трек.',
-                        required: false,
-                    },
-                    {
-                        name: 'search',
-                        type: 'STRING',
-                        description: 'Поиск по названию.',
-                        required: false,
-                    },
-                    {
-                        name: 'playlist',
-                        type: 'STRING',
-                        description: 'Ссылка на плейлист.',
-                        required: false,
-                    }
-                ]
-            },
-            {
-                name: 'skip',
-                description: 'Следующий трек в очереди.'
-            },
-            {
-                name: 'queue',
-                description: 'Просмотр очереди воспоизведения.'
-            },
-            {
-                name: 'pause',
-                description: 'Пауза'
-            },
-            {
-                name: 'resume',
-				description: 'Продолжить прослушивать.'
-            },
-            {
-                name: 'leave',
-				description: 'Покинуть канал.'
-            }
-        ])
-
-        await message.reply('Setuped!')
-    }
+client.once(Events.ClientReady, (c) => {
+    console.log(`Bot are ready! Logged in as ${c.user.tag}`)
 })
 
 const subscriptions = new Map<Snowflake, MusicSubscription>()
 
-client.on('interactionCreate', async (interaction: Interaction) => {
-    if(!interaction.isCommand() || !interaction.guildId) return
+client.on(Events.InteractionCreate, async (interaction: Interaction) => {
+    if(!interaction.isChatInputCommand() || !interaction.guildId) return
 
     let subscription = subscriptions.get(interaction.guildId)
 
@@ -147,7 +94,7 @@ client.on('interactionCreate', async (interaction: Interaction) => {
 
             subscription.enqueue(track)
 
-            const exampleEmbed  = new MessageEmbed({
+            const exampleEmbed  = new EmbedBuilder({
                 title: track.title,
                 url: y_url,
                 color: 0x0099ff,
@@ -204,7 +151,7 @@ client.on('interactionCreate', async (interaction: Interaction) => {
 					? `На данный момент ничего не играет!`
 					: `В эфире **${(subscription.audioPlayer.state.resource as AudioResource<Track>).metadata.title}**`
             const queue = subscription.queue
-                .slice(0, 5)
+                .slice(0, subscription.queue.length - 1)
                 .map((track, index) => `${index + 1}) ${track.title}`)
                 .join('\n')
 
@@ -256,4 +203,4 @@ const preparePlaylist = async (playlist_url: string) => {
 
 client.on('error', (err) => console.warn(err))
 
-void client.login(process.env.TOKEN)
+client.login(process.env.TOKEN as string)
