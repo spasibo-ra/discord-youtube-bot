@@ -2,6 +2,8 @@ import ytdl, { getInfo } from 'ytdl-core'
 import { AudioResource, createAudioResource, demuxProbe } from '@discordjs/voice'
 import { IAuthor, IThumbnails } from './data.interface'
 
+const COOKIE = process.env.COOKIE
+
 export interface TrackData {
 	url: string
 	title: string
@@ -13,7 +15,6 @@ export interface TrackData {
 	onFinish: () => void
 	onError: (error: Error) => void
 }
-
 
 const noop = () => {}
 
@@ -42,7 +43,16 @@ export class Track implements TrackData {
 
     public async createAudioResource(): Promise<AudioResource> {
         try {
-            const steam = ytdl(this.url, { filter: 'audioonly', highWaterMark: 1<<25 })
+            const steam = ytdl(this.url, { 
+				filter: 'audioonly', 
+				highWaterMark: 1<<25,
+				dlChunkSize: 0,
+				requestOptions: {
+					headers: {
+						cookie: COOKIE
+					}
+				} 
+			})
             return await this.probeAndCreateResource(steam)
         } catch (err) {
             console.log(err, 'createAudioResource')

@@ -2,19 +2,19 @@
   "compilerOptions": {
     "incremental": true,                            
     "target": "ES2020",                             
-     "experimentalDecorators": true,                
+    "experimentalDecorators": true,
     "module": "commonjs",                           
     "moduleResolution": "node",                     
     "baseUrl": "./",                                
     "resolveJsonModule": true,                      
     "allowJs": true,                                
     "declaration": true,                            
-    "outDir": "./dist",                             
+    "outDir": "./dist",                              /* Redirect output structure to the directory. */
     "removeComments": true,                         
     "esModuleInterop": true,                        
     "forceConsistentCasingInFileNames": true,       
     "strict": true,                                 
     "noImplicitAny": false,                         
-    "skipLibCheck": true                            
+    "skipLibCheck": true
   }
 }
